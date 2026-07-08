@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-config
+  namespace: todo-app
+data:
+  DATABASE_HOST: mysql-service
+  DATABASE_PORT: "3306"
+  SPRING_DATASOURCE_URL: "jdbc:mysql://mysql-service:3306/todo_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
