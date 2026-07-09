@@ -1,2 +1,31 @@
 front/.env
 /.vscode
+
+# Java / Maven
+**/target/
+*.class
+*.jar
+*.war
+
+# Node
+**/node_modules/
+**/dist/
+
+# IDE
+.idea/
+*.iml
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Terraform (cuando se agregue)
+**/.terraform/
+*.tfstate
+*.tfstate.backup
+terraform.tfvars
