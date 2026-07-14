@@ -15,6 +15,8 @@ WORKDIR /app
 
 COPY --from=builder /app/target/*.jar app.jar
 
+VOLUME /data
+
 EXPOSE 8080
 
-CMD ["java", "-jar", "app.jar"]
+CMD ["sh", "-c", "mkdir -p /data && java -jar app.jar"]

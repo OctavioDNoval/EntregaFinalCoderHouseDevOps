@@ -1,45 +1,13 @@
 services:
-  db:
-    image: mysql:8.0
-    container_name: todo_db
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: 123456
-      MYSQL_DATABASE: todo_db
-    ports:
-      - "3307:3306"
-    volumes:
-      - db_data:/var/lib/mysql
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p123456"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-  
   backend:
-    build: 
+    build:
       context: ./back
       dockerfile: Dockerfile
-    container_name: todo-backend
+    container_name: todo-api
     ports:
       - "8080:8080"
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/todo_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: 123456
-    depends_on:
-      db:
-        condition: service_healthy
-  
-  frontend:
-    build:
-      context: ./front
-      dockerfile: Dockerfile
-    container_name: todo-frontend
-    ports:
-      - "80:80"
-    depends_on:
-      - backend
+    volumes:
+      - sqlite_data:/data
 
 volumes:
-  db_data:
+  sqlite_data:
