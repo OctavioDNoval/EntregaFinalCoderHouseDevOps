@@ -20,10 +20,11 @@ data "aws_ami" "al2023" {
 }
 
 module "security" {
-  source      = "./modules/security"
-  name_prefix = var.project_name
-  vpc_id      = data.aws_vpc.default.id
-  app_port    = 8080
+  source             = "./modules/security"
+  name_prefix        = var.project_name
+  vpc_id             = data.aws_vpc.default.id
+  app_port           = 8080
+  monitoring_enabled = var.monitoring_enabled
 }
 
 module "compute" {

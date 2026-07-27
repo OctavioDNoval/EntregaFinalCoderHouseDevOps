@@ -1,0 +1,87 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-todo-api
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  spring-boot-api.json: |
+    {
+      "title": "Todo API - Spring Boot",
+      "tags": ["spring-boot"],
+      "schemaVersion": 39,
+      "version": 1,
+      "timezone": "browser",
+      "panels": [
+        {
+          "title": "CPU Usage",
+          "type": "timeseries",
+          "gridPos": {"x": 0, "y": 0, "w": 8, "h": 8},
+          "targets": [
+            {"expr": "process_cpu_usage", "legendFormat": "Process"},
+            {"expr": "system_cpu_usage", "legendFormat": "System"}
+          ]
+        },
+        {
+          "title": "Memory (Heap)",
+          "type": "timeseries",
+          "gridPos": {"x": 8, "y": 0, "w": 8, "h": 8},
+          "targets": [
+            {"expr": "jvm_memory_used_bytes{area=\"heap\"}", "legendFormat": "Used"},
+            {"expr": "jvm_memory_max_bytes{area=\"heap\"}", "legendFormat": "Max"}
+          ]
+        },
+        {
+          "title": "Memory (Non-Heap)",
+          "type": "timeseries",
+          "gridPos": {"x": 16, "y": 0, "w": 8, "h": 8},
+          "targets": [
+            {"expr": "jvm_memory_used_bytes{area=\"nonheap\"}", "legendFormat": "Used"}
+          ]
+        },
+        {
+          "title": "HTTP Requests / sec",
+          "type": "timeseries",
+          "gridPos": {"x": 0, "y": 8, "w": 12, "h": 8},
+          "targets": [
+            {"expr": "sum(rate(http_server_requests_seconds_count{uri!~\".*actuator.*\"}[1m]))", "legendFormat": "Total"},
+            {"expr": "rate(http_server_requests_seconds_count{uri!~\".*actuator.*\",status=~\"5..\"}[1m])", "legendFormat": "Errors 5xx"}
+          ]
+        },
+        {
+          "title": "HTTP Latency p95",
+          "type": "timeseries",
+          "gridPos": {"x": 12, "y": 8, "w": 12, "h": 8},
+          "targets": [
+            {"expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{uri!~\".*actuator.*\"}[1m])) by (le, uri, method))", "legendFormat": "{{method}} {{uri}}"}
+          ]
+        },
+        {
+          "title": "Active Threads",
+          "type": "timeseries",
+          "gridPos": {"x": 0, "y": 16, "w": 8, "h": 8},
+          "targets": [
+            {"expr": "jvm_threads_live_threads", "legendFormat": "Live"},
+            {"expr": "jvm_threads_daemon_threads", "legendFormat": "Daemon"}
+          ]
+        },
+        {
+          "title": "GC Pause Time",
+          "type": "timeseries",
+          "gridPos": {"x": 8, "y": 16, "w": 8, "h": 8},
+          "targets": [
+            {"expr": "rate(jvm_gc_pause_seconds_sum[1m])", "legendFormat": "GC pause/s"}
+          ]
+        },
+        {
+          "title": "Log Errors",
+          "type": "timeseries",
+          "gridPos": {"x": 16, "y": 16, "w": 8, "h": 8},
+          "targets": [
+            {"expr": "sum(rate(logback_events_total{level=\"error\"}[1m]))", "legendFormat": "Errors/s"}
+          ]
+        }
+      ],
+      "refresh": "30s"
+    }

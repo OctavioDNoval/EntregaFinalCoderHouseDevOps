@@ -20,3 +20,9 @@ variable "instance_type" {
   type        = string
   default     = "t3.micro"
 }
+
+variable "monitoring_enabled" {
+  description = "Desplegar Prometheus + Grafana en la EC2 y abrir puertos 9090/3000"
+  type        = bool
+  default     = true
+}

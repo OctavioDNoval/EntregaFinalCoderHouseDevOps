@@ -13,18 +13,18 @@ else
 fi
 
 cd /opt/app
-docker compose build
+docker compose -f docker-compose.yml -f monitoring/docker-compose.monitoring.yml build
 
 cat > /etc/systemd/system/app.service <<'UNITEOF'
 [Unit]
-Description=Todo API (Docker Compose)
+Description=Todo API + Monitoreo (Docker Compose)
 After=docker.service
 Requires=docker.service
 
 [Service]
 WorkingDirectory=/opt/app
-ExecStart=/usr/bin/docker compose up
-ExecStop=/usr/bin/docker compose down
+ExecStart=/usr/bin/docker compose -f docker-compose.yml -f monitoring/docker-compose.monitoring.yml up
+ExecStop=/usr/bin/docker compose -f docker-compose.yml -f monitoring/docker-compose.monitoring.yml down
 Restart=always
 RestartSec=10
 
