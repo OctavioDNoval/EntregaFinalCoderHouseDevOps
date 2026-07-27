@@ -38,23 +38,32 @@ API REST para gestión de tareas (TO-DO) desarrollada con Spring Boot 3.4.4 y SQ
 │       │   └── resources/application.properties    # SQLite config
 │       └── test/
 ├── docker-compose.yml             # Entorno local (API + SQLite)
+├── monitoring/                    # Monitoreo Prometheus + Grafana
+│   ├── prometheus.yml             #   Config de scrapeo
+│   ├── docker-compose.monitoring.yml
+│   └── grafana/provisioning/      #   Datasource + dashboards auto
 ├── k8s/                           # Manifiestos Kubernetes
 │   ├── 01-namespace.yml
 │   ├── 03-backend-deployment.yml  #   Deployment con emptyDir
 │   ├── 04-backend-service.yml
 │   ├── 05-backend-hpa.yml
-│   └── 06-ingress.yml
+│   ├── 06-ingress.yml
+│   ├── 07-servicemonitor.yml      #   Prometheus auto-descubrimiento
+│   └── 08-grafana-dashboard-configmap.yml
 ├── infraestructura/               # Terraform (AWS EC2 + Docker)
 │   ├── versions.tf                #   providers (aws, tls, local)
 │   ├── variables.tf               #   variables de entrada
 │   ├── main.tf                    #   data sources + modules
 │   ├── outputs.tf                 #   api_url, ec2_public_ip, ssh
+│   ├── scheduler.tf               #   EventBridge auto-shutdown
 │   ├── terraform.tfvars.example
 │   └── modules/
-│       ├── security/              #   Security Group (SSH + API)
+│       ├── security/              #   Security Group (SSH + API + monitoring)
 │       └── compute/               #   EC2 + EIP + user_data (Docker)
 ├── .github/workflows/ci.yml       # Pipeline CI/CD
-└── Documentacion/README.md        # Esta documentación
+└── Documentacion/
+    ├── README.md                  # Esta documentación
+    └── FINOPS.md                  # Gestión de costos en AWS
 ```
 
 ---
@@ -238,6 +247,8 @@ Al finalizar, Terraform muestra los outputs:
 - `api_url` → `http://<IP>:8080`
 - `ec2_public_ip` → IP pública de la EC2
 - `ssh_command` → comando SSH con la clave generada
+- `monitoring_urls` → URLs de Prometheus y Grafana
+- `shutdown_schedule` → Horario de apagado automático (dev)
 
 ### Limpieza
 
@@ -256,7 +267,7 @@ El pipeline se define en `.github/workflows/ci.yml` y se ejecuta automáticament
 | Job | Descripción |
 |---|---|
 | `build` | Compila el proyecto con Maven y sube el JAR como artifact |
-| `deploy` | Se conecta por SSH a la EC2, hace `git pull` y `docker compose up --build` |
+| `deploy` | Se conecta por SSH a la EC2, hace `git pull` y reinicia `systemd` (que levanta API + monitoreo) |
 
 ### Secrets requeridos
 
@@ -269,26 +280,27 @@ Configurar en GitHub → Settings → Secrets and variables → Actions:
 
 ---
 
-## Pendiente para próxima sesión
+## Funcionalidades implementadas
 
-### Monitoreo con Prometheus y Grafana
+### ✅ Monitoreo con Prometheus y Grafana
 
-> ⏳ Pendiente de implementar.
+La API expone métricas en `/actuator/prometheus` vía Micrometer. Prometheus scrapea cada 15s y Grafana visualiza con un dashboard precargado de 8 paneles (CPU, memoria, requests/s, latencia p95, errores, threads, GC, logs).
 
-Se planea agregar:
-- Dependencia `micrometer-registry-prometheus` en `pom.xml` para exponer métricas en `/actuator/prometheus`
-- `docker-compose.monitoring.yml` con servicios de Prometheus y Grafana
-- Config de Prometheus para scrapeo del backend
-- Dashboard de Grafana con métricas de CPU, memoria, requests, etc.
+Disponible en 3 entornos:
 
-### FinOps
+| Entorno | Cómo se despliega |
+|---|---|
+| **Local** | `docker compose -f docker-compose.yml -f monitoring/docker-compose.monitoring.yml up` |
+| **Kubernetes** | `helm install prometheus-stack prometheus-community/kube-prometheus-stack` + `kubectl apply -f k8s/07-servicemonitor.yml` |
+| **AWS (EC2)** | Automático via `user_data.sh.tpl` (incluido en systemd) |
 
-> ⏳ Pendiente de implementar.
+### ✅ FinOps — Gestión de costos en AWS
 
-Se planea agregar:
-- Etiquetado de recursos AWS con tags de costo (`Environment`, `Project`, `Owner`)
-- Documentación de estimación de costos mensuales
-- Scripts de apagado automático para entornos de prueba
+Se aplicaron las 3 fases del ciclo FinOps:
+
+1. **Inform** — Tags de cost allocation (`Environment`, `Project`, `Owner`, `ManagedBy`) en todos los recursos AWS via `default_tags`
+2. **Optimize** — Auto-shutdown con EventBridge Scheduler (apaga 20:00, enciende 08:00 ART, solo días hábiles). Ahorro estimado ~65%
+3. **Operate** — Documentación en `Documentacion/FINOPS.md` con desglose de costos, budgets recomendados y estrategias de ahorro
 
 ---
 
@@ -334,14 +346,22 @@ Se recomienda capturar y adjuntar en el informe:
 ## Comandos rápidos
 
 ```bash
-# Local
+# Local (solo API)
 docker compose up --build
+
+# Local (API + Monitoreo)
+docker compose -f docker-compose.yml -f monitoring/docker-compose.monitoring.yml up --build
 
 # K8s
 kubectl apply -f k8s/
 
+# K8s (monitoreo con kube-prometheus-stack)
+helm upgrade --install prometheus-stack prometheus-community/kube-prometheus-stack --namespace monitoring --create-namespace
+
 # Terraform
-cd infraestructura && terraform init && terraform apply
+cd infraestructura && cp terraform.tfvars.example terraform.tfvars
+# Editar terraform.tfvars con tu repo URL y nombre
+terraform init && terraform apply
 
 # CI/CD
 git push origin main
@@ -350,8 +370,15 @@ git push origin main
 docker compose logs -f
 kubectl logs -n todo-app -f deployment/backend-api
 
+# Prometheus UI
+open http://localhost:9090
+
+# Grafana
+open http://localhost:3000   # admin/admin
+
 # Destroy
 docker compose down -v
 terraform destroy
 kubectl delete -f k8s/
+helm uninstall prometheus-stack -n monitoring
 ```
