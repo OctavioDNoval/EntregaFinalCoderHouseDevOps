@@ -22,6 +22,11 @@ variable "app_repo_url" {
   type = string
 }
 
+variable "tags" {
+  description = "Tags de cost allocation"
+  type        = map(string)
+}
+
 variable "key_filename" {
   description = "Nombre del archivo .pem que se genera en la raiz del proyecto"
   type        = string

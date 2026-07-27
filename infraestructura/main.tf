@@ -1,3 +1,12 @@
+locals {
+  common_tags = {
+    Environment = var.environment
+    Project     = var.project_name
+    Owner       = var.owner
+    ManagedBy   = "Terraform"
+  }
+}
+
 data "aws_vpc" "default" {
   default = true
 }
@@ -25,6 +34,7 @@ module "security" {
   vpc_id             = data.aws_vpc.default.id
   app_port           = 8080
   monitoring_enabled = var.monitoring_enabled
+  tags               = local.common_tags
 }
 
 module "compute" {
@@ -35,4 +45,5 @@ module "compute" {
   subnet_id     = data.aws_subnets.default.ids[0]
   ec2_sg_id     = module.security.ec2_sg_id
   app_repo_url  = var.app_repo_url
+  tags          = local.common_tags
 }

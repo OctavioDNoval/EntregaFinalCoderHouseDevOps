@@ -13,6 +13,14 @@ output "ssh_command" {
   value       = "ssh -i clave.pem ec2-user@${module.compute.public_ip}"
 }
 
+output "shutdown_schedule" {
+  description = "Horario de apagado automatico (solo en dev)"
+  value = var.environment == "dev" ? {
+    schedule = "LU-VIE 20:00 apaga, 08:00 enciende"
+    timezone = "America/Argentina/Buenos_Aires"
+  } : "Desactivado (entorno: ${var.environment})"
+}
+
 output "monitoring_urls" {
   description = "URLs de monitoreo (solo si monitoring_enabled = true)"
   value = var.monitoring_enabled ? {

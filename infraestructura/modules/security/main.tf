@@ -1,6 +1,7 @@
 resource "aws_security_group" "ec2" {
   name   = "${var.name_prefix}-ec2-sg"
   vpc_id = var.vpc_id
+  tags   = merge(var.tags, { Name = "${var.name_prefix}-ec2-sg" })
 
   ingress {
     description = "SSH"

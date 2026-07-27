@@ -26,3 +26,14 @@ variable "monitoring_enabled" {
   type        = bool
   default     = true
 }
+
+variable "environment" {
+  description = "Entorno: dev, staging, prod"
+  type        = string
+  default     = "dev"
+}
+
+variable "owner" {
+  description = "Responsable del recurso (para cost allocation)"
+  type        = string
+}

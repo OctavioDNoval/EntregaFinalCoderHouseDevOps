@@ -6,6 +6,7 @@ resource "tls_private_key" "this" {
 resource "aws_key_pair" "this" {
   key_name   = "${var.name_prefix}-key"
   public_key = tls_private_key.this.public_key_openssh
+  tags       = merge(var.tags, { Name = "${var.name_prefix}-key" })
 }
 
 locals {
@@ -22,14 +23,13 @@ resource "aws_instance" "this" {
   key_name               = aws_key_pair.this.key_name
   user_data              = local.user_data
 
-  tags = {
-    Name = "${var.name_prefix}-ec2"
-  }
+  tags = merge(var.tags, { Name = "${var.name_prefix}-ec2" })
 }
 
 resource "aws_eip" "this" {
   instance = aws_instance.this.id
   domain   = "vpc"
+  tags     = merge(var.tags, { Name = "${var.name_prefix}-eip" })
 }
 
 resource "local_file" "private_key" {

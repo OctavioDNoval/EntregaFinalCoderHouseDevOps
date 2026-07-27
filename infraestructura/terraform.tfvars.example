@@ -6,3 +6,5 @@ app_repo_url  = "https://github.com/TU_USUARIO/TU_REPO.git"
 
 instance_type        = "t3.micro"
 monitoring_enabled   = true
+environment          = "dev"
+owner                = "tu-nombre"
