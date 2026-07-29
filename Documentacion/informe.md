@@ -109,9 +109,9 @@ docker compose -f docker-compose.yml -f monitoring/docker-compose.monitoring.yml
 
 **Grafana** (`grafana/grafana:11.3.0`): Escucha en el puerto `3000`, monta la configuración de provisioning para auto-conectar el datasource de Prometheus y cargar el dashboard predefinido.
 
-![Build y contenedores levantados](imagenes/BuildSucces.png)
+![Build y contenedores levantados](imagenes/buildsuccess.png)
 
-![Interacción con la API](imagenes/interactuarConApi.png)
+![Interacción con la API](imagenes/interactuarconapi.png)
 
 ---
 
@@ -303,7 +303,7 @@ scrape_configs:
       - targets: ["backend:8080"]
 ```
 
-![Targets de Prometheus](imagenes/todoAPIup.png)
+![Targets de Prometheus](imagenes/todoapiup.png)
 
 ### 6.4 Dashboard de Grafana
 
@@ -320,7 +320,7 @@ El dashboard precargado incluye 8 paneles:
 | GC Pause Time     | `rate(jvm_gc_pause_seconds_sum[1m])`            | Tiempo de garbage collector  |
 | Log Errors        | `rate(logback_events_total{level="error"}[1m])` | Errores por segundo          |
 
-![Dashboard de Grafana](imagenes/Grafana.png)
+![Dashboard de Grafana](imagenes/grafana.png)
 
 ### 6.5 Despliegue en los 3 entornos
 
